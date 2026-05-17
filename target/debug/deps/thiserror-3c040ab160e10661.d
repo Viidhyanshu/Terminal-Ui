@@ -1,0 +1,14 @@
+/Users/vidhyanshukumar/Desktop/tui/mytui/target/debug/deps/thiserror-3c040ab160e10661.d: /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/vidhyanshukumar/Desktop/tui/mytui/target/debug/build/thiserror-17249f76d1f01689/out/private.rs
+
+/Users/vidhyanshukumar/Desktop/tui/mytui/target/debug/deps/libthiserror-3c040ab160e10661.rlib: /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/vidhyanshukumar/Desktop/tui/mytui/target/debug/build/thiserror-17249f76d1f01689/out/private.rs
+
+/Users/vidhyanshukumar/Desktop/tui/mytui/target/debug/deps/libthiserror-3c040ab160e10661.rmeta: /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/vidhyanshukumar/Desktop/tui/mytui/target/debug/build/thiserror-17249f76d1f01689/out/private.rs
+
+/Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs:
+/Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs:
+/Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs:
+/Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs:
+/Users/vidhyanshukumar/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs:
+/Users/vidhyanshukumar/Desktop/tui/mytui/target/debug/build/thiserror-17249f76d1f01689/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/vidhyanshukumar/Desktop/tui/mytui/target/debug/build/thiserror-17249f76d1f01689/out

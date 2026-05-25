@@ -1,3 +1,10 @@
+pub mod app;
+pub mod modules;
+pub mod services;
+pub mod state;
+pub mod ui;
+pub mod utils;
+
 use std::io;
 
 use crossterm::{
@@ -28,10 +35,10 @@ fn main() -> Result<(), io::Error> {
         terminal.draw(|f| {
             let size = f.area();
 
-            let block = Paragraph::new("Hello Vii 🚀")
+            let block = Paragraph::new("Github")
                 .block(
                     Block::default()
-                        .title("Rust TUI")
+                        .title("Dashboard")
                         .borders(Borders::ALL),
                 );
 

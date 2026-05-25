@@ -90,13 +90,6 @@ src/
    cargo run
    ```
 
----
-
-## 🎨 Design Philosophy
-
-* **Rich Aesthetics**: Utilizing curated HSL-tailored colors, sleek dark modes, and crisp borders.
-* **Dynamic Design**: Interactive hover-like states, micro-animations, and fluid transitions.
-* **Speed**: Minimal latency UI updates with active local caching for instant layouts on boot.
 
 ---
 

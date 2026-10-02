@@ -6,10 +6,10 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::App;
+use crate::app::{App, DashboardView};
 use crate::ui::theme::Theme;
 
-pub fn render_dashboard(frame: &mut Frame, _app: &App) {
+pub fn render_dashboard(frame: &mut Frame, app: &App) {
     let theme = Theme::default();
     let area = frame.area();
 
@@ -18,24 +18,34 @@ pub fn render_dashboard(frame: &mut Frame, _app: &App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // Header
-            Constraint::Min(20),   // Main GitHub Content Area
+            Constraint::Min(20),   // Main Dashboard Area
             Constraint::Length(1), // Footer
         ])
         .split(area);
 
-    render_header(frame, &theme, vertical_chunks[0]);
-    render_github_layout(frame, &theme, vertical_chunks[1]);
-    render_footer(frame, &theme, vertical_chunks[2]);
+    render_header(frame, app, &theme, vertical_chunks[0]);
+
+    match app.current_view {
+        DashboardView::GitHub => render_github_layout(frame, &theme, vertical_chunks[1]),
+        DashboardView::LeetCode => render_leetcode_layout(frame, &theme, vertical_chunks[1]),
+    }
+
+    render_footer(frame, app, &theme, vertical_chunks[2]);
 }
 
-fn render_header(frame: &mut Frame, theme: &Theme, area: Rect) {
+fn render_header(frame: &mut Frame, app: &App, theme: &Theme, area: Rect) {
     let header_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(theme.border);
 
+    let title_str = match app.current_view {
+        DashboardView::GitHub => " GitHub Dashboard ",
+        DashboardView::LeetCode => " LeetCode Dashboard ",
+    };
+
     let title_line = Line::from(vec![
-        Span::styled(" GitHub Dashboard ", theme.title),
+        Span::styled(title_str, theme.title),
         Span::styled("v0.1.0", theme.text_muted),
     ]);
 
@@ -44,23 +54,166 @@ fn render_header(frame: &mut Frame, theme: &Theme, area: Rect) {
         .alignment(Alignment::Left);
 
     let status_line = Line::from(vec![
-        Span::styled("Connected ", Style::default().fg(Color::Green)),
-        Span::styled("| macOS", theme.text_muted),
+        Span::styled(
+            if app.current_view == DashboardView::GitHub { "[1] GitHub" } else { " 1  GitHub" },
+            if app.current_view == DashboardView::GitHub { theme.accent.add_modifier(Modifier::BOLD) } else { theme.text_muted },
+        ),
+        Span::styled("  │  ", theme.text_muted),
+        Span::styled(
+            if app.current_view == DashboardView::LeetCode { "[2] LeetCode" } else { " 2  LeetCode" },
+            if app.current_view == DashboardView::LeetCode { theme.accent.add_modifier(Modifier::BOLD) } else { theme.text_muted },
+        ),
+        Span::styled("  │ Connected ", Style::default().fg(Color::Green)),
     ]);
 
     let status_widget = Paragraph::new(status_line).alignment(Alignment::Right);
 
     frame.render_widget(title_widget, area);
 
-    // Overlay right-aligned status badge
+    // Overlay right-aligned view indicators
     let inner_header = Rect {
-        x: area.x + area.width.saturating_sub(22),
+        x: area.x + area.width.saturating_sub(44),
         y: area.y + 1,
-        width: 20.min(area.width),
+        width: 42.min(area.width),
         height: 1,
     };
     frame.render_widget(status_widget, inner_header);
 }
+
+/* ========================================================================= */
+/*                          LEETCODE DASHBOARD LAYOUT                        */
+/* ========================================================================= */
+
+fn render_leetcode_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let sections = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(7), // Top: Profile/Rating + Solved Breakdown
+            Constraint::Length(8), // Middle: Submissions Heatmap
+            Constraint::Min(9),    // Bottom: Recent Submissions & Topic Mastery
+        ])
+        .split(area);
+
+    render_leetcode_top_section(frame, theme, sections[0]);
+    render_leetcode_heatmap_section(frame, theme, sections[1]);
+    render_leetcode_bottom_section(frame, theme, sections[2]);
+}
+
+fn render_leetcode_top_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Length(36), // Profile & Rating
+            Constraint::Min(40),    // 4 Problems Solved Cards
+        ])
+        .split(area);
+
+    // Profile & Ranking Block
+    let profile_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Profile & Ranking ", theme.title));
+
+    let profile_lines = vec![
+        Line::from(vec![
+            Span::styled("Username: ", theme.text_muted),
+            Span::styled("--", theme.text_secondary),
+        ]),
+        Line::from(vec![
+            Span::styled("Ranking:  ", theme.text_muted),
+            Span::styled("--", theme.text_secondary),
+        ]),
+        Line::from(vec![
+            Span::styled("Rating:   ", theme.text_muted),
+            Span::styled("--", theme.text_secondary),
+        ]),
+        Line::from(vec![
+            Span::styled("Badges:   ", theme.text_muted),
+            Span::styled("--", theme.text_secondary),
+        ]),
+    ];
+
+    let profile_widget = Paragraph::new(profile_lines).block(profile_block);
+    frame.render_widget(profile_widget, chunks[0]);
+
+    // 4 Solved Cards: Total, Easy, Medium, Hard
+    let stat_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Ratio(1, 4),
+            Constraint::Ratio(1, 4),
+            Constraint::Ratio(1, 4),
+            Constraint::Ratio(1, 4),
+        ])
+        .split(chunks[1]);
+
+    let stats_data = [
+        ("Total Solved", "0", theme.text_primary),
+        ("Easy", "0", Style::default().fg(Color::Green)),
+        ("Medium", "0", Style::default().fg(Color::Yellow)),
+        ("Hard", "0", Style::default().fg(Color::Red)),
+    ];
+
+    for (i, (title, value, style)) in stats_data.iter().enumerate() {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .border_style(theme.border)
+            .title(Span::styled(format!(" {} ", title), theme.title));
+
+        let content = vec![
+            Line::from(""),
+            Line::from(Span::styled(*value, style.add_modifier(Modifier::BOLD))),
+        ];
+
+        let widget = Paragraph::new(content)
+            .alignment(Alignment::Center)
+            .block(block);
+
+        frame.render_widget(widget, stat_chunks[i]);
+    }
+}
+
+fn render_leetcode_heatmap_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Submission Activity ", theme.title));
+
+    frame.render_widget(Paragraph::new("").block(block), area);
+}
+
+fn render_leetcode_bottom_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(55), // Recent Submissions
+            Constraint::Percentage(45), // Topic Mastery
+        ])
+        .split(area);
+
+    let sub_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Recent Submissions ", theme.title));
+
+    frame.render_widget(Paragraph::new("").block(sub_block), chunks[0]);
+
+    let skills_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Topic Mastery ", theme.title));
+
+    frame.render_widget(Paragraph::new("").block(skills_block), chunks[1]);
+}
+
+/* ========================================================================= */
+/*                          GITHUB DASHBOARD LAYOUT                          */
+/* ========================================================================= */
 
 fn render_github_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
     let sections = Layout::default()
@@ -72,12 +225,12 @@ fn render_github_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
         ])
         .split(area);
 
-    render_top_section(frame, theme, sections[0]);
-    render_heatmap_section(frame, theme, sections[1]);
-    render_bottom_section(frame, theme, sections[2]);
+    render_github_top_section(frame, theme, sections[0]);
+    render_github_heatmap_section(frame, theme, sections[1]);
+    render_github_bottom_section(frame, theme, sections[2]);
 }
 
-fn render_top_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+fn render_github_top_section(frame: &mut Frame, theme: &Theme, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
@@ -157,19 +310,18 @@ fn render_top_section(frame: &mut Frame, theme: &Theme, area: Rect) {
     }
 }
 
-fn render_heatmap_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+fn render_github_heatmap_section(frame: &mut Frame, theme: &Theme, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(theme.border)
         .title(Span::styled(" Contributions (2026) ", theme.title));
 
-    // Clean subtle shades
-    let l0 = Style::default().fg(Color::Rgb(35, 40, 48));   // Empty
-    let l1 = Style::default().fg(Color::Rgb(20, 75, 45));   // Low
-    let l2 = Style::default().fg(Color::Rgb(35, 120, 65));  // Mid-low
-    let l3 = Style::default().fg(Color::Rgb(45, 160, 80));  // Mid-high
-    let l4 = Style::default().fg(Color::Rgb(60, 200, 100)); // High
+    let l0 = Style::default().fg(Color::Rgb(35, 40, 48));
+    let l1 = Style::default().fg(Color::Rgb(20, 75, 45));
+    let l2 = Style::default().fg(Color::Rgb(35, 120, 65));
+    let l3 = Style::default().fg(Color::Rgb(45, 160, 80));
+    let l4 = Style::default().fg(Color::Rgb(60, 200, 100));
 
     let mut heatmap_lines = Vec::new();
     let day_labels = ["Mon ", "    ", "Wed ", "    ", "Fri ", "    ", "Sun "];
@@ -203,13 +355,12 @@ fn render_heatmap_section(frame: &mut Frame, theme: &Theme, area: Rect) {
         heatmap_lines.push(Line::from(spans));
     }
 
-    // Legend & stats line
     heatmap_lines.push(Line::from(vec![
         Span::styled("  Total: ", theme.text_muted),
         Span::styled("842 contributions in the last year", theme.text_secondary),
-        Span::styled("  |  Streak: ", theme.text_muted),
+        Span::styled("  │  Streak: ", theme.text_muted),
         Span::styled("14 days", theme.accent),
-        Span::styled("  |  Less ", theme.text_muted),
+        Span::styled("  │  Less ", theme.text_muted),
         Span::styled("■ ", l0),
         Span::styled("■ ", l1),
         Span::styled("■ ", l2),
@@ -222,7 +373,7 @@ fn render_heatmap_section(frame: &mut Frame, theme: &Theme, area: Rect) {
     frame.render_widget(widget, area);
 }
 
-fn render_bottom_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+fn render_github_bottom_section(frame: &mut Frame, theme: &Theme, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
@@ -231,7 +382,7 @@ fn render_bottom_section(frame: &mut Frame, theme: &Theme, area: Rect) {
         ])
         .split(area);
 
-    // 1. Top Repositories Panel
+    // Top Repositories Panel
     let repos_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
@@ -267,7 +418,7 @@ fn render_bottom_section(frame: &mut Frame, theme: &Theme, area: Rect) {
     let repos_widget = Paragraph::new(repos_lines).block(repos_block);
     frame.render_widget(repos_widget, chunks[0]);
 
-    // 2. Recent Activity Panel
+    // Recent Activity Panel
     let activity_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
@@ -305,14 +456,19 @@ fn render_bottom_section(frame: &mut Frame, theme: &Theme, area: Rect) {
     frame.render_widget(activity_widget, chunks[1]);
 }
 
-fn render_footer(frame: &mut Frame, theme: &Theme, area: Rect) {
+fn render_footer(frame: &mut Frame, _app: &App, theme: &Theme, area: Rect) {
     let shortcuts = Line::from(vec![
+        Span::styled("[1] ", theme.footer_key),
+        Span::styled("GitHub  ", theme.footer_text),
+        Span::styled("│  ", theme.text_muted),
+        Span::styled("[2] ", theme.footer_key),
+        Span::styled("LeetCode  ", theme.footer_text),
+        Span::styled("│  ", theme.text_muted),
+        Span::styled("[Tab] ", theme.footer_key),
+        Span::styled("Switch View  ", theme.footer_text),
+        Span::styled("│  ", theme.text_muted),
         Span::styled("[q] ", theme.footer_key),
-        Span::styled("Quit  ", theme.footer_text),
-        Span::styled("[r] ", theme.footer_key),
-        Span::styled("Refresh  ", theme.footer_text),
-        Span::styled("[?] ", theme.footer_key),
-        Span::styled("Help", theme.footer_text),
+        Span::styled("Quit", theme.footer_text),
     ]);
 
     let footer = Paragraph::new(shortcuts);

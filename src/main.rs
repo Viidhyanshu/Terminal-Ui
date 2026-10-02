@@ -15,7 +15,7 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 
-use app::App;
+use app::{App, DashboardView};
 use ui::layout::render_dashboard;
 
 fn main() -> Result<(), io::Error> {
@@ -27,7 +27,7 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // App state
+    // App state (starts on LeetCode by default)
     let mut app = App::new();
 
     // Main event loop
@@ -43,6 +43,15 @@ fn main() -> Result<(), io::Error> {
                     match key.code {
                         KeyCode::Char('q') | KeyCode::Esc => {
                             app.quit();
+                        }
+                        KeyCode::Tab => {
+                            app.toggle_view();
+                        }
+                        KeyCode::Char('1') => {
+                            app.set_view(DashboardView::GitHub);
+                        }
+                        KeyCode::Char('2') => {
+                            app.set_view(DashboardView::LeetCode);
                         }
                         _ => {}
                     }

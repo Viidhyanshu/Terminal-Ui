@@ -7,7 +7,7 @@ impl App {
         Self { should_quit: false }
     }
 
-    pub fn update(&mut self) {
-        // Update application state
+    pub fn quit(&mut self) {
+        self.should_quit = true;
     }
 }

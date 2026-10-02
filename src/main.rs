@@ -6,54 +6,55 @@ pub mod ui;
 pub mod utils;
 
 use std::io;
+use std::time::Duration;
 
 use crossterm::{
-    event::{self, Event, KeyCode},
+    event::{self, Event, KeyCode, KeyEventKind},
     execute,
-    terminal::{
-        disable_raw_mode, enable_raw_mode,
-        EnterAlternateScreen, LeaveAlternateScreen,
-    },
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use ratatui::{backend::CrosstermBackend, Terminal};
 
-use ratatui::{
-    backend::CrosstermBackend,
-    widgets::{Block, Borders, Paragraph},
-    Terminal,
-};
+use app::App;
+use ui::layout::render_dashboard;
 
 fn main() -> Result<(), io::Error> {
+    // Setup terminal
     enable_raw_mode()?;
-
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    loop {
-        terminal.draw(|f| {
-            let size = f.area();
+    // App state
+    let mut app = App::new();
 
-            let block = Paragraph::new("Github")
-                .block(
-                    Block::default()
-                        .title("Dashboard")
-                        .borders(Borders::ALL),
-                );
-
-            f.render_widget(block, size);
+    // Main event loop
+    while !app.should_quit {
+        terminal.draw(|frame| {
+            render_dashboard(frame, &app);
         })?;
 
-        if let Event::Key(key) = event::read()? {
-            if key.code == KeyCode::Char('q') {
-                break;
+        // Poll for user input with a short timeout
+        if event::poll(Duration::from_millis(50))? {
+            if let Event::Key(key) = event::read()? {
+                if key.kind == KeyEventKind::Press {
+                    match key.code {
+                        KeyCode::Char('q') | KeyCode::Esc => {
+                            app.quit();
+                        }
+                        _ => {}
+                    }
+                }
             }
         }
     }
 
+    // Restore terminal
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    terminal.show_cursor()?;
 
     Ok(())
 }

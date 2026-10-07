@@ -501,20 +501,31 @@ fn render_spotify_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
 
     render_spotify_top_section(frame, theme, sections[0]);
 
-    // Placeholders for subsequent steps
-    let mid_block = Block::default()
+    // Middle section: Left (Library & Playlists) and Right (Track Queue)
+    let mid_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Length(36), // Left: Your Library & Playlists (Step 3)
+            Constraint::Min(45),    // Right: Current Queue & Tracklist (Step 4)
+        ])
+        .split(sections[1]);
+
+    render_spotify_playlists_section(frame, theme, mid_chunks[0]);
+
+    // Placeholder for Step 4 (Queue & Tracklist)
+    let queue_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(theme.border)
-        .title(Span::styled(" Library & Queue (Steps 3 & 4) ", theme.title));
+        .title(Span::styled(" Current Queue & Tracklist (Step 4) ", theme.title));
     frame.render_widget(
         Paragraph::new(vec![
             Line::from(""),
-            Line::from(Span::styled("Library & Playlists (Left) and Track Queue (Right)", theme.text_muted)),
+            Line::from(Span::styled("Queue, tracklist, and durations will be rendered here", theme.text_muted)),
         ])
         .alignment(Alignment::Center)
-        .block(mid_block),
-        sections[1],
+        .block(queue_block),
+        mid_chunks[1],
     );
 
     let bottom_block = Block::default()
@@ -616,4 +627,69 @@ fn render_spotify_top_section(frame: &mut Frame, theme: &Theme, area: Rect) {
 
     frame.render_widget(controls_widget, chunks[1]);
 }
+
+fn render_spotify_playlists_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let spotify_green = Style::default().fg(Color::Rgb(30, 215, 96));
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Your Library ", spotify_green.add_modifier(Modifier::BOLD)));
+
+    let playlists = vec![
+        Line::from(vec![
+            Span::styled(" ♥ ", spotify_green.add_modifier(Modifier::BOLD)),
+            Span::styled("Liked Songs", theme.text_primary.add_modifier(Modifier::BOLD)),
+            Span::styled("       342 tracks", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled(" 📻 ", theme.accent),
+            Span::styled("Episodes & Shows", theme.text_secondary),
+            Span::styled("   14 saved", theme.text_muted),
+        ]),
+        Line::from(Span::styled(" ─────────────────────────────", theme.border)),
+        Line::from(vec![
+            Span::styled(" ▶ ", spotify_green),
+            Span::styled("Coding Focus Beats", spotify_green.add_modifier(Modifier::BOLD)),
+            Span::styled("   128", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled("   ", theme.text_muted),
+            Span::styled("Synthwave & Night Drive", theme.text_primary),
+            Span::styled("  84", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled("   ", theme.text_muted),
+            Span::styled("Lo-Fi Chillhop Beats", theme.text_primary),
+            Span::styled("     210", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled("   ", theme.text_muted),
+            Span::styled("Deep Work & Rust Focus", theme.text_primary),
+            Span::styled("   65", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled("   ", theme.text_muted),
+            Span::styled("Discover Weekly", theme.accent),
+            Span::styled("          30", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled("   ", theme.text_muted),
+            Span::styled("Release Radar", theme.accent),
+            Span::styled("            30", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled("   ", theme.text_muted),
+            Span::styled("Ambient Electronic", theme.text_primary),
+            Span::styled("       92", theme.text_muted),
+        ]),
+        Line::from(""),
+        Line::from(Span::styled(" 📁 8 Playlists  •  961 Tracks", theme.text_muted)),
+    ];
+
+    let widget = Paragraph::new(playlists).block(block);
+    frame.render_widget(widget, area);
+}
+
 

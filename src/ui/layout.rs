@@ -512,21 +512,7 @@ fn render_spotify_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
 
     render_spotify_playlists_section(frame, theme, mid_chunks[0]);
 
-    // Placeholder for Step 4 (Queue & Tracklist)
-    let queue_block = Block::default()
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(theme.border)
-        .title(Span::styled(" Current Queue & Tracklist (Step 4) ", theme.title));
-    frame.render_widget(
-        Paragraph::new(vec![
-            Line::from(""),
-            Line::from(Span::styled("Queue, tracklist, and durations will be rendered here", theme.text_muted)),
-        ])
-        .alignment(Alignment::Center)
-        .block(queue_block),
-        mid_chunks[1],
-    );
+    render_spotify_queue_section(frame, theme, mid_chunks[1]);
 
     let bottom_block = Block::default()
         .borders(Borders::ALL)
@@ -691,5 +677,115 @@ fn render_spotify_playlists_section(frame: &mut Frame, theme: &Theme, area: Rect
     let widget = Paragraph::new(playlists).block(block);
     frame.render_widget(widget, area);
 }
+
+fn render_spotify_queue_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let spotify_green = Style::default().fg(Color::Rgb(30, 215, 96));
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Current Queue & Tracklist ", spotify_green.add_modifier(Modifier::BOLD)));
+
+    let show_album = area.width >= 70;
+
+    let mut queue_lines = Vec::new();
+
+    if show_album {
+        queue_lines.push(Line::from(vec![
+            Span::styled(" #   ", theme.text_muted),
+            Span::styled("TITLE                         ", theme.text_muted),
+            Span::styled("ARTIST              ", theme.text_muted),
+            Span::styled("ALBUM                 ", theme.text_muted),
+            Span::styled("TIME", theme.text_muted),
+        ]));
+        queue_lines.push(Line::from(Span::styled(
+            " ────────────────────────────────────────────────────────────────────────",
+            theme.border,
+        )));
+    } else {
+        queue_lines.push(Line::from(vec![
+            Span::styled(" #   ", theme.text_muted),
+            Span::styled("TITLE                   ", theme.text_muted),
+            Span::styled("ARTIST              ", theme.text_muted),
+            Span::styled("TIME", theme.text_muted),
+        ]));
+        queue_lines.push(Line::from(Span::styled(
+            " ────────────────────────────────────────────────────────",
+            theme.border,
+        )));
+    }
+
+    struct TrackEntry<'a> {
+        num: &'a str,
+        title: &'a str,
+        artist: &'a str,
+        album: &'a str,
+        duration: &'a str,
+        is_playing: bool,
+    }
+
+    let tracks = [
+        TrackEntry { num: "1", title: "Starboy", artist: "The Weeknd, Daft Punk", album: "Starboy (Deluxe)", duration: "3:50", is_playing: true },
+        TrackEntry { num: "2", title: "Midnight City", artist: "M83", album: "Hurry Up, We're...", duration: "4:03", is_playing: false },
+        TrackEntry { num: "3", title: "Resonance", artist: "HOME", album: "Odyssey", duration: "3:32", is_playing: false },
+        TrackEntry { num: "4", title: "After Dark", artist: "Mr.Kitty", album: "Time", duration: "4:17", is_playing: false },
+        TrackEntry { num: "5", title: "Nightcall", artist: "Kavinsky", album: "OutRun", duration: "4:19", is_playing: false },
+        TrackEntry { num: "6", title: "Tech Noir", artist: "GUNSHIP", album: "GUNSHIP", duration: "4:57", is_playing: false },
+        TrackEntry { num: "7", title: "Genesis", artist: "Justice", album: "Cross", duration: "3:54", is_playing: false },
+        TrackEntry { num: "8", title: "Days of Thunder", artist: "The Midnight", album: "Days of Thunder", duration: "5:24", is_playing: false },
+    ];
+
+    for track in tracks.iter() {
+        let (num_style, title_style, artist_style, duration_style) = if track.is_playing {
+            (
+                spotify_green.add_modifier(Modifier::BOLD),
+                spotify_green.add_modifier(Modifier::BOLD),
+                spotify_green,
+                spotify_green,
+            )
+        } else {
+            (
+                theme.text_muted,
+                theme.text_primary,
+                theme.text_secondary,
+                theme.text_muted,
+            )
+        };
+
+        let icon = if track.is_playing { "▶ " } else { "  " };
+
+        if show_album {
+            queue_lines.push(Line::from(vec![
+                Span::styled(format!("{}{:<2} ", icon, track.num), num_style),
+                Span::styled(format!("{:<30}", track.title), title_style),
+                Span::styled(format!("{:<20}", track.artist), artist_style),
+                Span::styled(format!("{:<22}", track.album), theme.text_muted),
+                Span::styled(track.duration, duration_style),
+            ]));
+        } else {
+            queue_lines.push(Line::from(vec![
+                Span::styled(format!("{}{:<2} ", icon, track.num), num_style),
+                Span::styled(format!("{:<24}", track.title), title_style),
+                Span::styled(format!("{:<20}", track.artist), artist_style),
+                Span::styled(track.duration, duration_style),
+            ]));
+        }
+    }
+
+    queue_lines.push(Line::from(""));
+    queue_lines.push(Line::from(vec![
+        Span::styled(" Queue Status: ", theme.text_muted),
+        Span::styled("8 songs queued", theme.text_primary),
+        Span::styled("  │  Total Duration: ", theme.text_muted),
+        Span::styled("34 min 16 sec", theme.text_secondary),
+        Span::styled("  │  Autoplay: ", theme.text_muted),
+        Span::styled("ON", spotify_green),
+    ]));
+
+    let widget = Paragraph::new(queue_lines).block(block);
+    frame.render_widget(widget, area);
+}
+
 
 

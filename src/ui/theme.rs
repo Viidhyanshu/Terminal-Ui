@@ -7,6 +7,7 @@ pub struct Theme {
     pub text_secondary: Style,
     pub text_muted: Style,
     pub accent: Style,
+    pub spotify_green: Style,
     pub footer_key: Style,
     pub footer_text: Style,
 }
@@ -20,6 +21,7 @@ impl Default for Theme {
             text_secondary: Style::default().fg(Color::Gray),
             text_muted: Style::default().fg(Color::DarkGray),
             accent: Style::default().fg(Color::Cyan),
+            spotify_green: Style::default().fg(Color::Rgb(30, 215, 96)),
             footer_key: Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
             footer_text: Style::default().fg(Color::DarkGray),
         }

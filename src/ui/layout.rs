@@ -40,14 +40,14 @@ fn render_header(frame: &mut Frame, app: &App, theme: &Theme, area: Rect) {
         .border_type(BorderType::Rounded)
         .border_style(theme.border);
 
-    let title_str = match app.current_view {
-        DashboardView::GitHub => " GitHub Dashboard ",
-        DashboardView::LeetCode => " LeetCode Dashboard ",
-        DashboardView::Spotify => " Spotify Player ",
+    let (title_str, title_style) = match app.current_view {
+        DashboardView::GitHub => (" GitHub Dashboard ", theme.title),
+        DashboardView::LeetCode => (" LeetCode Dashboard ", theme.title),
+        DashboardView::Spotify => (" Spotify Player ", theme.spotify_green.add_modifier(Modifier::BOLD)),
     };
 
     let title_line = Line::from(vec![
-        Span::styled(title_str, theme.title),
+        Span::styled(title_str, title_style),
         Span::styled("v0.1.0", theme.text_muted),
     ]);
 
@@ -68,7 +68,7 @@ fn render_header(frame: &mut Frame, app: &App, theme: &Theme, area: Rect) {
         Span::styled("  │  ", theme.text_muted),
         Span::styled(
             if app.current_view == DashboardView::Spotify { "[3] Spotify" } else { " 3  Spotify" },
-            if app.current_view == DashboardView::Spotify { theme.accent.add_modifier(Modifier::BOLD) } else { theme.text_muted },
+            if app.current_view == DashboardView::Spotify { theme.spotify_green.add_modifier(Modifier::BOLD) } else { theme.text_muted },
         ),
         Span::styled("  │ Connected ", Style::default().fg(Color::Green)),
     ]);
@@ -494,8 +494,8 @@ fn render_spotify_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(7), // Top: Now Playing & Playback Controls Bar
-            Constraint::Min(10),   // Middle: Playlists & Queue (Steps 3 & 4)
-            Constraint::Length(7), // Bottom: Visualizer & Devices (Step 5)
+            Constraint::Min(10),   // Middle: Playlists & Queue
+            Constraint::Length(8), // Bottom: Visualizer & Devices
         ])
         .split(area);
 
@@ -511,27 +511,13 @@ fn render_spotify_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
         .split(sections[1]);
 
     render_spotify_playlists_section(frame, theme, mid_chunks[0]);
-
     render_spotify_queue_section(frame, theme, mid_chunks[1]);
 
-    let bottom_block = Block::default()
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(theme.border)
-        .title(Span::styled(" Devices & Visualizer (Step 5) ", theme.title));
-    frame.render_widget(
-        Paragraph::new(vec![
-            Line::from(""),
-            Line::from(Span::styled("Audio Spectrum Visualizer & Connected Devices", theme.text_muted)),
-        ])
-        .alignment(Alignment::Center)
-        .block(bottom_block),
-        sections[2],
-    );
+    render_spotify_bottom_section(frame, theme, sections[2]);
 }
 
 fn render_spotify_top_section(frame: &mut Frame, theme: &Theme, area: Rect) {
-    let spotify_green = Style::default().fg(Color::Rgb(30, 215, 96));
+    let spotify_green = theme.spotify_green;
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
@@ -615,7 +601,7 @@ fn render_spotify_top_section(frame: &mut Frame, theme: &Theme, area: Rect) {
 }
 
 fn render_spotify_playlists_section(frame: &mut Frame, theme: &Theme, area: Rect) {
-    let spotify_green = Style::default().fg(Color::Rgb(30, 215, 96));
+    let spotify_green = theme.spotify_green;
 
     let block = Block::default()
         .borders(Borders::ALL)
@@ -679,7 +665,7 @@ fn render_spotify_playlists_section(frame: &mut Frame, theme: &Theme, area: Rect
 }
 
 fn render_spotify_queue_section(frame: &mut Frame, theme: &Theme, area: Rect) {
-    let spotify_green = Style::default().fg(Color::Rgb(30, 215, 96));
+    let spotify_green = theme.spotify_green;
 
     let block = Block::default()
         .borders(Borders::ALL)
@@ -786,6 +772,87 @@ fn render_spotify_queue_section(frame: &mut Frame, theme: &Theme, area: Rect) {
     let widget = Paragraph::new(queue_lines).block(block);
     frame.render_widget(widget, area);
 }
+
+fn render_spotify_bottom_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let bottom_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(55), // Audio Spectrum Visualizer
+            Constraint::Percentage(45), // Spotify Connect & Output Devices
+        ])
+        .split(area);
+
+    // 1. Audio Spectrum Visualizer Block
+    let spec_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Audio Spectrum Visualizer ", theme.spotify_green.add_modifier(Modifier::BOLD)));
+
+    let g1 = theme.spotify_green;
+    let g2 = Style::default().fg(Color::Rgb(60, 230, 120));
+    let g3 = Style::default().fg(Color::Rgb(40, 160, 80));
+
+    let spec_lines = vec![
+        Line::from(vec![
+            Span::styled(" Peak: ", theme.text_muted),
+            Span::styled(" ▂ ▄ ▅ ▆ ▇ █ ▇ ▆ ▅ ▄ ▃ ▅ ▆ ▇ █ ▇ ▆ ▅ ▄ ▃ ▂   ▂ ▃ ▄ ▅ ▆ ▇ █ ▇ ▆ ▅", g1),
+        ]),
+        Line::from(vec![
+            Span::styled(" Live: ", theme.text_muted),
+            Span::styled(" ▃ ▅ ▇ █ ▇ ▅ ▃ ▄ ▆ ▇ █ ▇ ▅ ▃ ▂ ▃ ▅ ▇ █ ▇ ▅ ▃ ▄ ▆ ▇ █ ▇ ▅ ▃ ▂ ▄ ▆", g2),
+        ]),
+        Line::from(vec![
+            Span::styled(" RMS:  ", theme.text_muted),
+            Span::styled(" ▂ ▃ ▄ ▅ ▆ ▅ ▄ ▃ ▄ ▅ ▆ ▅ ▄ ▃ ▂ ▂ ▃ ▄ ▅ ▆ ▅ ▄ ▃ ▄ ▅ ▆ ▅ ▄ ▃ ▂ ▂ ▃ ▄", g3),
+        ]),
+        Line::from(vec![
+            Span::styled(" Freq: ", theme.text_muted),
+            Span::styled(" [20Hz]       [100Hz]       [500Hz]       [2.5kHz]       [10kHz]     [20kHz]", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled(" Mode: ", theme.text_muted),
+            Span::styled("Realtime FFT (44.1 kHz • 16-bit)  │  Dynamic Range: 96 dB", theme.text_secondary),
+        ]),
+    ];
+
+    let spec_widget = Paragraph::new(spec_lines).block(spec_block);
+    frame.render_widget(spec_widget, bottom_chunks[0]);
+
+    // 2. Spotify Connect & Devices Block
+    let dev_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Spotify Connect & Devices ", theme.spotify_green.add_modifier(Modifier::BOLD)));
+
+    let dev_lines = vec![
+        Line::from(vec![
+            Span::styled(" ● Active:  ", theme.spotify_green),
+            Span::styled("MacBook Pro Speakers", theme.text_primary.add_modifier(Modifier::BOLD)),
+            Span::styled("  [Vol: 75%]", theme.text_secondary),
+        ]),
+        Line::from(vec![
+            Span::styled(" ○ Device:  ", theme.text_muted),
+            Span::styled("Living Room Echo (Spotify Connect)", theme.text_secondary),
+        ]),
+        Line::from(vec![
+            Span::styled(" ○ Device:  ", theme.text_muted),
+            Span::styled("Sony WH-1000XM5 (Bluetooth)", theme.text_secondary),
+        ]),
+        Line::from(Span::styled(" ──────────────────────────────────────────", theme.border)),
+        Line::from(vec![
+            Span::styled(" Quality: ", theme.text_muted),
+            Span::styled("Very High (320 kbps)", theme.spotify_green),
+            Span::styled(" │ Normalize: ", theme.text_muted),
+            Span::styled("-14 LUFS", theme.text_secondary),
+        ]),
+    ];
+
+    let dev_widget = Paragraph::new(dev_lines).block(dev_block);
+    frame.render_widget(dev_widget, bottom_chunks[1]);
+}
+
 
 
 

@@ -53,6 +53,9 @@ fn main() -> Result<(), io::Error> {
                         KeyCode::Char('2') => {
                             app.set_view(DashboardView::LeetCode);
                         }
+                        KeyCode::Char('3') => {
+                            app.set_view(DashboardView::Spotify);
+                        }
                         _ => {}
                     }
                 }

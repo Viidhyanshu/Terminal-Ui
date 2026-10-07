@@ -2,6 +2,7 @@
 pub enum DashboardView {
     GitHub,
     LeetCode,
+    Spotify,
 }
 
 pub struct App {
@@ -20,7 +21,8 @@ impl App {
     pub fn toggle_view(&mut self) {
         self.current_view = match self.current_view {
             DashboardView::GitHub => DashboardView::LeetCode,
-            DashboardView::LeetCode => DashboardView::GitHub,
+            DashboardView::LeetCode => DashboardView::Spotify,
+            DashboardView::Spotify => DashboardView::GitHub,
         };
     }
 

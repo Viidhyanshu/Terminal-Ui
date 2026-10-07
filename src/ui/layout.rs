@@ -28,6 +28,7 @@ pub fn render_dashboard(frame: &mut Frame, app: &App) {
     match app.current_view {
         DashboardView::GitHub => render_github_layout(frame, &theme, vertical_chunks[1]),
         DashboardView::LeetCode => render_leetcode_layout(frame, &theme, vertical_chunks[1]),
+        DashboardView::Spotify => render_spotify_layout(frame, &theme, vertical_chunks[1]),
     }
 
     render_footer(frame, app, &theme, vertical_chunks[2]);
@@ -42,6 +43,7 @@ fn render_header(frame: &mut Frame, app: &App, theme: &Theme, area: Rect) {
     let title_str = match app.current_view {
         DashboardView::GitHub => " GitHub Dashboard ",
         DashboardView::LeetCode => " LeetCode Dashboard ",
+        DashboardView::Spotify => " Spotify Player ",
     };
 
     let title_line = Line::from(vec![
@@ -63,6 +65,11 @@ fn render_header(frame: &mut Frame, app: &App, theme: &Theme, area: Rect) {
             if app.current_view == DashboardView::LeetCode { "[2] LeetCode" } else { " 2  LeetCode" },
             if app.current_view == DashboardView::LeetCode { theme.accent.add_modifier(Modifier::BOLD) } else { theme.text_muted },
         ),
+        Span::styled("  │  ", theme.text_muted),
+        Span::styled(
+            if app.current_view == DashboardView::Spotify { "[3] Spotify" } else { " 3  Spotify" },
+            if app.current_view == DashboardView::Spotify { theme.accent.add_modifier(Modifier::BOLD) } else { theme.text_muted },
+        ),
         Span::styled("  │ Connected ", Style::default().fg(Color::Green)),
     ]);
 
@@ -72,9 +79,9 @@ fn render_header(frame: &mut Frame, app: &App, theme: &Theme, area: Rect) {
 
     // Overlay right-aligned view indicators
     let inner_header = Rect {
-        x: area.x + area.width.saturating_sub(44),
+        x: area.x + area.width.saturating_sub(60),
         y: area.y + 1,
-        width: 42.min(area.width),
+        width: 58.min(area.width),
         height: 1,
     };
     frame.render_widget(status_widget, inner_header);
@@ -464,6 +471,9 @@ fn render_footer(frame: &mut Frame, _app: &App, theme: &Theme, area: Rect) {
         Span::styled("[2] ", theme.footer_key),
         Span::styled("LeetCode  ", theme.footer_text),
         Span::styled("│  ", theme.text_muted),
+        Span::styled("[3] ", theme.footer_key),
+        Span::styled("Spotify  ", theme.footer_text),
+        Span::styled("│  ", theme.text_muted),
         Span::styled("[Tab] ", theme.footer_key),
         Span::styled("Switch View  ", theme.footer_text),
         Span::styled("│  ", theme.text_muted),
@@ -474,3 +484,27 @@ fn render_footer(frame: &mut Frame, _app: &App, theme: &Theme, area: Rect) {
     let footer = Paragraph::new(shortcuts);
     frame.render_widget(footer, area);
 }
+
+/* ========================================================================= */
+/*                          SPOTIFY DASHBOARD LAYOUT                         */
+/* ========================================================================= */
+
+fn render_spotify_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Spotify Music Player ", theme.title));
+
+    let placeholder = Paragraph::new(vec![
+        Line::from(""),
+        Line::from(Span::styled("♫ Spotify Layout Initialized", theme.text_primary.add_modifier(Modifier::BOLD))),
+        Line::from(""),
+        Line::from(Span::styled("Preparing layout sections: Now Playing bar, Library & Playlists, Queue, and Audio Visualizer...", theme.text_muted)),
+    ])
+    .alignment(Alignment::Center)
+    .block(block);
+
+    frame.render_widget(placeholder, area);
+}
+

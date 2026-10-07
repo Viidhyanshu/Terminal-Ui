@@ -490,21 +490,130 @@ fn render_footer(frame: &mut Frame, _app: &App, theme: &Theme, area: Rect) {
 /* ========================================================================= */
 
 fn render_spotify_layout(frame: &mut Frame, theme: &Theme, area: Rect) {
-    let block = Block::default()
+    let sections = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(7), // Top: Now Playing & Playback Controls Bar
+            Constraint::Min(10),   // Middle: Playlists & Queue (Steps 3 & 4)
+            Constraint::Length(7), // Bottom: Visualizer & Devices (Step 5)
+        ])
+        .split(area);
+
+    render_spotify_top_section(frame, theme, sections[0]);
+
+    // Placeholders for subsequent steps
+    let mid_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(theme.border)
-        .title(Span::styled(" Spotify Music Player ", theme.title));
+        .title(Span::styled(" Library & Queue (Steps 3 & 4) ", theme.title));
+    frame.render_widget(
+        Paragraph::new(vec![
+            Line::from(""),
+            Line::from(Span::styled("Library & Playlists (Left) and Track Queue (Right)", theme.text_muted)),
+        ])
+        .alignment(Alignment::Center)
+        .block(mid_block),
+        sections[1],
+    );
 
-    let placeholder = Paragraph::new(vec![
+    let bottom_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Devices & Visualizer (Step 5) ", theme.title));
+    frame.render_widget(
+        Paragraph::new(vec![
+            Line::from(""),
+            Line::from(Span::styled("Audio Spectrum Visualizer & Connected Devices", theme.text_muted)),
+        ])
+        .alignment(Alignment::Center)
+        .block(bottom_block),
+        sections[2],
+    );
+}
+
+fn render_spotify_top_section(frame: &mut Frame, theme: &Theme, area: Rect) {
+    let spotify_green = Style::default().fg(Color::Rgb(30, 215, 96));
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Length(42), // Track Info & Metadata
+            Constraint::Min(40),    // Playback Controls & Progress Bar
+        ])
+        .split(area);
+
+    // Track Info Block
+    let track_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Now Playing ", spotify_green.add_modifier(Modifier::BOLD)));
+
+    let track_lines = vec![
+        Line::from(vec![
+            Span::styled("Track:   ", theme.text_muted),
+            Span::styled("Starboy ", theme.text_primary.add_modifier(Modifier::BOLD)),
+            Span::styled("• Explicit", theme.text_muted),
+        ]),
+        Line::from(vec![
+            Span::styled("Artist:  ", theme.text_muted),
+            Span::styled("The Weeknd, Daft Punk", theme.text_secondary),
+        ]),
+        Line::from(vec![
+            Span::styled("Album:   ", theme.text_muted),
+            Span::styled("Starboy (Deluxe)", theme.text_secondary),
+        ]),
+        Line::from(vec![
+            Span::styled("From:    ", theme.text_muted),
+            Span::styled("Coding Focus Beats", theme.accent),
+        ]),
+    ];
+
+    let track_widget = Paragraph::new(track_lines).block(track_block);
+    frame.render_widget(track_widget, chunks[0]);
+
+    // Playback Controls Block
+    let controls_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border)
+        .title(Span::styled(" Playback Controls ", theme.title));
+
+    let controls_line = Line::from(vec![
+        Span::styled("[🔀 Shuffle] ", spotify_green),
+        Span::styled("  ⏮ Prev  ", theme.text_secondary),
+        Span::styled("  ▶ PLAYING  ", spotify_green.add_modifier(Modifier::BOLD)),
+        Span::styled("  ⏭ Next  ", theme.text_secondary),
+        Span::styled("  [🔁 Repeat: All] ", spotify_green),
+    ]);
+
+    let progress_bar_line = Line::from(vec![
+        Span::styled("01:48 ", theme.text_secondary),
+        Span::styled("━━━━━━━━━━━━━━━━━━━●", spotify_green),
+        Span::styled("────────────────────", theme.text_muted),
+        Span::styled(" 03:50", theme.text_muted),
+    ]);
+
+    let meta_line = Line::from(vec![
+        Span::styled("Volume: ", theme.text_muted),
+        Span::styled("75% ", theme.text_primary),
+        Span::styled("[■■■■■■■□□□]", spotify_green),
+        Span::styled("  │  Device: ", theme.text_muted),
+        Span::styled("MacBook Pro", theme.text_secondary),
+        Span::styled("  │  Audio: ", theme.text_muted),
+        Span::styled("320 kbps (Lossless)", spotify_green),
+    ]);
+
+    let controls_widget = Paragraph::new(vec![
+        controls_line,
         Line::from(""),
-        Line::from(Span::styled("♫ Spotify Layout Initialized", theme.text_primary.add_modifier(Modifier::BOLD))),
-        Line::from(""),
-        Line::from(Span::styled("Preparing layout sections: Now Playing bar, Library & Playlists, Queue, and Audio Visualizer...", theme.text_muted)),
+        progress_bar_line,
+        meta_line,
     ])
     .alignment(Alignment::Center)
-    .block(block);
+    .block(controls_block);
 
-    frame.render_widget(placeholder, area);
+    frame.render_widget(controls_widget, chunks[1]);
 }
 
